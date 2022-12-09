@@ -63,7 +63,7 @@ class Program
                 .WithName("dc")
                 .WithDescription("データセンター")
                 .WithRequired(false)
-                .AddChoice("Elemental", 1)
+                .AddChoice("Elemental",304)
                 .AddChoice("Gaia", 2)
                 .AddChoice("Mana", 3)
                 .AddChoice("Meteor", 4)
@@ -147,11 +147,20 @@ class Program
         var item = command.Data.Options.First().Value;
         Console.WriteLine(item);
 
-        string str = searchitem((string)item);
+        try{
+            var items = command.Data.Options.Where(x => x.Name == "dc").First().Value;
+            Console.WriteLine(items);
+        }catch (Exception exception)
+        {
+            Console.WriteLine(exception.ToString());
+        }
+
+            string str = searchitem((string)item);
 
         if (str == null)
         {
             await command.RespondAsync("正しいアイテム名を入力して下さい。");
+            return;
         }
         string[] strsplit = str.Split(",");
         string[] strsplit2 = market_world().Split(",");
