@@ -63,7 +63,7 @@ class Program
                 .WithName("dc")
                 .WithDescription("データセンター")
                 .WithRequired(false)
-                .AddChoice("Elemental",304)
+                .AddChoice("Elemental",1)
                 .AddChoice("Gaia", 2)
                 .AddChoice("Mana", 3)
                 .AddChoice("Meteor", 4)
@@ -72,53 +72,53 @@ class Program
                 .WithName("elemental_world")
                 .WithDescription("Elementalワールド")
                 .WithRequired(false)
-                .AddChoice("Aegis", 1)
-                .AddChoice("Atomos", 2)
-                .AddChoice("Carbuncle", 3)
-                .AddChoice("Garuda", 4)
-                .AddChoice("Gungnir", 5)
-                .AddChoice("Kujata", 6)
-                .AddChoice("Tonberry", 7)
-                .AddChoice("Typhon", 8)
+                .AddChoice("Aegis", 90)
+                .AddChoice("Atomos", 68)
+                .AddChoice("Carbuncle", 45)
+                .AddChoice("Garuda", 58)
+                .AddChoice("Gungnir", 94)
+                .AddChoice("Kujata", 49)
+                .AddChoice("Tonberry", 72)
+                .AddChoice("Typhon", 50)
                 .WithType(ApplicationCommandOptionType.Integer))
             .AddOption(new SlashCommandOptionBuilder()
                 .WithName("gaia_world")
                 .WithDescription("Gaiaワールド")
                 .WithRequired(false)
-                .AddChoice("Alexander", 1)
-                .AddChoice("Bahamut", 2)
-                .AddChoice("Durandal", 3)
-                .AddChoice("Fenrir", 4)
-                .AddChoice("Ifrit", 5)
-                .AddChoice("Ridill", 6)
-                .AddChoice("Tiamat", 7)
-                .AddChoice("Ultima", 8)
+                .AddChoice("Alexander", 43)
+                .AddChoice("Bahamut", 69)
+                .AddChoice("Durandal", 92)
+                .AddChoice("Fenrir", 46)
+                .AddChoice("Ifrit", 59)
+                .AddChoice("Ridill", 98)
+                .AddChoice("Tiamat", 76)
+                .AddChoice("Ultima", 51)
                 .WithType(ApplicationCommandOptionType.Integer))
             .AddOption(new SlashCommandOptionBuilder()
                 .WithName("mana_world")
                 .WithDescription("Manaワールド")
                 .WithRequired(false)
-                .AddChoice("Anima", 1)
-                .AddChoice("Asura", 2)
-                .AddChoice("Chocobo", 3)
-                .AddChoice("Hades", 4)
-                .AddChoice("Ixion", 5)
-                .AddChoice("Masamune", 6)
-                .AddChoice("Pandaemonium", 7)
-                .AddChoice("Titan", 8)
+                .AddChoice("Anima", 44)
+                .AddChoice("Asura", 23)
+                .AddChoice("Chocobo", 70)
+                .AddChoice("Hades", 47)
+                .AddChoice("Ixion", 48)
+                .AddChoice("Masamune", 96)
+                .AddChoice("Pandaemonium", 28)
+                .AddChoice("Titan", 61)
                 .WithType(ApplicationCommandOptionType.Integer))
             .AddOption(new SlashCommandOptionBuilder()
                 .WithName("meteor_world")
                 .WithDescription("Meteorワールド")
                 .WithRequired(false)
-                .AddChoice("Belias", 1)
-                .AddChoice("Mandragora", 2)
-                .AddChoice("Ramuh", 3)
-                .AddChoice("Shinryu", 4)
-                .AddChoice("Unicorn", 5)
-                .AddChoice("Valefor", 6)
-                .AddChoice("Yojimbo", 7)
-                .AddChoice("Zeromus", 8)
+                .AddChoice("Belias", 24)
+                .AddChoice("Mandragora", 82)
+                .AddChoice("Ramuh", 60)
+                .AddChoice("Shinryu", 29)
+                .AddChoice("Unicorn", 30)
+                .AddChoice("Valefor", 52)
+                .AddChoice("Yojimbo", 31)
+                .AddChoice("Zeromus", 32)
                 .WithType(ApplicationCommandOptionType.Integer));
         try
         {
@@ -144,16 +144,55 @@ class Program
     private async Task SearchCommand(SocketSlashCommand command)
     {
 
+        if(command.Data.Options.Count > 2)
+        {
+            await command.RespondAsync("アイテムの名前以外は１つまで入力可能です。");
+            return;
+        }
+
+        int world;
+        int dc;
+        bool world_b = false;
+        bool dc_b = false;
+
+
+        try
+        {
+            var world_id = command.Data.Options.Where(x => x.Name == "elemental_world").First().Value;
+            world = (int)world_id;
+            world_b = true;
+        }catch (Exception exception) { }
+        try
+        {
+            var world_id = command.Data.Options.Where(x => x.Name == "gaia_world").First().Value;
+            world = (int)world_id;
+            world_b = true;
+        }
+        catch (Exception exception) { }
+        try
+        {
+            var world_id = command.Data.Options.Where(x => x.Name == "mana_world").First().Value;
+            world = (int)world_id;
+            world_b = true;
+        }
+        catch (Exception exception) { }
+        try
+        {
+            var world_id = command.Data.Options.Where(x => x.Name == "meteor_world").First().Value;
+            world = (int)world_id;
+            world_b = true;
+        }
+        catch (Exception exception) { }
+        try
+        {
+            var dc_id = command.Data.Options.Where(x => x.Name == "dc").First().Value;
+            dc = (int)dc_id;
+            dc_b = true;
+        }
+        catch (Exception exception){}
+
         var item = command.Data.Options.First().Value;
         Console.WriteLine(item);
-
-        try{
-            var items = command.Data.Options.Where(x => x.Name == "dc").First().Value;
-            Console.WriteLine(items);
-        }catch (Exception exception)
-        {
-            Console.WriteLine(exception.ToString());
-        }
 
             string str = searchitem((string)item);
 
