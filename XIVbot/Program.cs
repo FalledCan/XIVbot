@@ -150,8 +150,8 @@ class Program
             return;
         }
 
-        int world;
-        int dc;
+        int world = -1;
+        int dc = -1;
         bool world_b = false;
         bool dc_b = false;
 
@@ -202,7 +202,7 @@ class Program
             return;
         }
         string[] strsplit = str.Split(",");
-        string[] strsplit2 = market_world().Split(",");
+        string[] strsplit2 = market(dc,world,dc_b,world_b).Split(",");
 
         var list = new List<EmbedFieldBuilder>();
 
@@ -256,7 +256,7 @@ class Program
 
     }
 
-    string market_world()
+    string market(int dc, int world, bool dc_b, bool world_b)
     {
 
         string url = "https://universalis.app/api/v2/59/36047?listings=10&hq=true";
@@ -274,33 +274,6 @@ class Program
             list = list + j_pricePerUnit + "," + j_quantity + "," + j_hq + "," + j_total + ",";
         }
         return list;
-    }
-
-    string market_dc()
-    {
-
-        string url = "https://universalis.app/api/v2/59/36047?listings=10&hq=true";
-        WebRequest request = WebRequest.Create(url);
-        Stream response_stream = request.GetResponse().GetResponseStream();
-        StreamReader reader = new StreamReader(response_stream);
-        var xiv_json = JObject.Parse(reader.ReadToEnd());
-     
-
-        return ";";
-    }
-
-    string market_jp()
-    {
-
-        string url = "https://universalis.app/api/v2/59/36047?listings=10&hq=true";
-        WebRequest request = WebRequest.Create(url);
-        Stream response_stream = request.GetResponse().GetResponseStream();
-        StreamReader reader = new StreamReader(response_stream);
-        var xiv_json = JObject.Parse(reader.ReadToEnd());
-        var j_id = xiv_json["Results"][0]["ID"];
-
-
-        return ";";
     }
 
 }
