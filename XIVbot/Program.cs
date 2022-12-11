@@ -150,8 +150,8 @@ class Program
             return;
         }
 
-        int world = -1;
-        int dc = -1;
+        string world = "-1";
+        string dc = "-1";
         bool world_b = false;
         bool dc_b = false;
 
@@ -159,34 +159,34 @@ class Program
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "elemental_world").First().Value;
-            world = (int)world_id;
+            world = (string)world_id;
             world_b = true;
         }catch (Exception exception) { }
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "gaia_world").First().Value;
-            world = (int)world_id;
+            world = (string)world_id;
             world_b = true;
         }
         catch (Exception exception) { }
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "mana_world").First().Value;
-            world = (int)world_id;
+            world = (string)world_id;
             world_b = true;
         }
         catch (Exception exception) { }
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "meteor_world").First().Value;
-            world = (int)world_id;
+            world = (string)world_id;
             world_b = true;
         }
         catch (Exception exception) { }
         try
         {
             var dc_id = command.Data.Options.Where(x => x.Name == "dc").First().Value;
-            dc = (int)dc_id;
+            dc = (string)dc_id;
             dc_b = true;
         }
         catch (Exception exception){}
@@ -202,7 +202,7 @@ class Program
             return;
         }
         string[] strsplit = str.Split(",");
-        string[] strsplit2 = market(dc,world,dc_b,world_b).Split(",");
+        string[] strsplit2 = market(dc,world,dc_b,world_b,strsplit[0]).Split(",");
 
         var list = new List<EmbedFieldBuilder>();
 
@@ -240,13 +240,12 @@ class Program
         Stream response_stream = request.GetResponse().GetResponseStream();
         StreamReader reader = new StreamReader(response_stream);
         var xiv_json = JObject.Parse(reader.ReadToEnd());
-        if ((int)xiv_json["Pagination"]["Results"] == 1)
+        if ((int)xiv_json["Pagination"]["Results"] != null)
         {
             var j_id = xiv_json["Results"][0]["ID"];
             var j_icon = xiv_json["Results"][0]["Icon"];
             var j_name = xiv_json["Results"][0]["Name"];
             var j_url = xiv_json["Results"][0]["Url"];
-            Console.WriteLine(j_name);
 
             return j_id + "," + j_icon + "," + j_name + "," + j_url;
         }
@@ -256,22 +255,29 @@ class Program
 
     }
 
-    string market(int dc, int world, bool dc_b, bool world_b)
+    string market(string dc, string world, bool dc_b, bool world_b , string item_id)
     {
 
-        string url = "https://universalis.app/api/v2/59/36047?listings=10&hq=true";
+        string jdw = "Japan";
+
+        if (dc_b) { jdw = dc;}
+        if (world_b) { jdw = world;}
+        string url = "https://universalis.app/api/v2/" + jdw + "/" + item_id + "?listings=6";
+
         WebRequest request = WebRequest.Create(url);
         Stream response_stream = request.GetResponse().GetResponseStream();
         StreamReader reader = new StreamReader(response_stream);
         var xiv_json = JObject.Parse(reader.ReadToEnd());
         string list = null;
         for (int i = 0; i < 6; i++) {
-            var j_pricePerUnit = xiv_json["listings"][0]["pricePerUnit"];   //0,4,8,12,16,20
-            var j_quantity = xiv_json["listings"][0]["quantity"];           //1,5,9,13,17,21
-            var j_hq = xiv_json["listings"][0]["hq"];                       //2,6,10,14,18,22
-            var j_total = xiv_json["listings"][0]["total"];                 //3,7,11,15,19,23
+            var j_pricePerUnit = xiv_json["listings"][i]["pricePerUnit"];   //0,4,8,12,16,20
+            var j_quantity = xiv_json["listings"][i]["quantity"];           //1,5,9,13,17,21
+            var j_hq = xiv_json["listings"][i]["hq"];                       //2,6,10,14,18,22
+            var j_total = xiv_json["listings"][i]["total"];                 //3,7,11,15,19,23
 
             list = list + j_pricePerUnit + "," + j_quantity + "," + j_hq + "," + j_total + ",";
+
+            Console.WriteLine(list);
         }
         return list;
     }
