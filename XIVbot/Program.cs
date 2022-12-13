@@ -20,9 +20,9 @@ class Program
     string key_Token(String kt)
     {
         if (kt == "token")
-            return "MTA0OTQ5MjQ2OTMzMjU5MDY1Mw.GibMpb.o8EBqK-hYdDPpm1LY_RrMJ1jK5H0EeZ0tGMxuk";
+            return "[token]";
         else if (kt == "key")
-            return "&private_key=63a4cc3c61404bddb8b35acc18b7694f14f0728f42014909b79d74fab5fd0e4a";
+            return "&private_key=[key]";
         return kt;
     }
 
@@ -151,6 +151,8 @@ class Program
     private async Task SearchCommand(SocketSlashCommand command)
     {
 
+        command.DeferAsync();
+
         string world = "-1";
         string dc = "-1";
         bool world_b = false;
@@ -164,42 +166,43 @@ class Program
             world = world_id + "";
             Console.WriteLine(world);
             world_b = true;
-        } catch (Exception exception) { Console.WriteLine("skp1" + exception.Message); }
+        }
+        catch (Exception exception) {}
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "gaia_world").First().Value;
             world = world_id + "";
             world_b = true;
         }
-        catch (Exception exception) { Console.WriteLine("skp2"); }
+        catch (Exception exception) { }
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "mana_world").First().Value;
             world = world_id + "";
             world_b = true;
         }
-        catch (Exception exception) { Console.WriteLine("skp3"); }
+        catch (Exception exception) {}
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "meteor_world").First().Value;
             world = world_id + "";
             world_b = true;
         }
-        catch (Exception exception) { Console.WriteLine("skp4"); }
+        catch (Exception exception) { }
         try
         {
             var dc_id = command.Data.Options.Where(x => x.Name == "dc").First().Value;
             dc = dc_id + "";
             dc_b = true;
         }
-        catch (Exception exception) { Console.WriteLine("skp5"); }
+        catch (Exception exception) { }
 
 
         var hqb = command.Data.Options.Where(x => x.Name == "hq").First().Value;
         var item = command.Data.Options.First().Value;
-        Console.WriteLine(item + ", " + hqb);
+        Console.WriteLine(item);
 
-            string str = searchitem((string)item);
+        string str = searchitem((string)item);
 
         if (str == null)
         {
@@ -207,34 +210,49 @@ class Program
             return;
         }
         string[] strsplit = str.Split(",");
-        string[] strsplit2 = market(dc,world,dc_b,world_b,strsplit[0],hqb + ""== "1"? true:false).Split(",");
+        string mk = market(dc, world, dc_b, world_b, strsplit[0], hqb + "" == "1" ? true : false);
         var list = new List<EmbedFieldBuilder>();
 
-        if (strsplit2.Length != 1) { 
-        
-
-            for (int i = 0; i < 6; i++)
-                list.Add(
-                    new EmbedFieldBuilder()
-                    {
-                //0,4,8,12,16,20//1,5,9,13,17,21//3,7,11,15,19,23
-                Name = "Ifrit",
-                        Value = "単価: " + strsplit2[i == 0 ? 0 : i == 1 ? 4 : i == 2 ? 8 : i == 3 ? 12 : i == 4 ? 16 : 20]
-                        + " 個数: " + strsplit2[i == 0 ? 1 : i == 1 ? 5 : i == 2 ? 9 : i == 3 ? 13 : i == 4 ? 17 : 21]
-                        + "\n 合計: " + strsplit2[i == 0 ? 3 : i == 1 ? 7 : i == 2 ? 11 : i == 3 ? 15 : i == 4 ? 19 : 23]
-                    }
-                    );
-        }
-        else
-        {
+        if (mk == "hoge" || mk == "hogehoge") { 
             list.Add(
-                    new EmbedFieldBuilder()
-                    {
-                        Name = "マーケット取引不可",
-                        Value= "null"
-                    }
-                    );
+                  new EmbedFieldBuilder()
+                  {
+                      Name = "No data",
+                      Value = "原因:マーケット取引不可、もしくは出品されていません。"
+                  }
+                  );
         }
+        else {
+            string[] strsplit2 = mk.Split(",");
+            int count = Int32.Parse(strsplit2[5]);
+            if (count != 0)
+            {
+
+                string[] _world = strsplit2[4].Split(";");
+                string[] _PPU = strsplit2[0].Split(";");
+                string[] _quantity = strsplit2[1].Split(";");
+                string[] _hq = strsplit2[2].Split(";");
+                string[] _total = strsplit2[3].Split(";");
+
+                for (int i = 0; i < count; i++)
+                {
+                    var __hq = _hq[i] == "True" ? " (HQ)" : "";
+
+                    list.Add(
+                        new EmbedFieldBuilder()
+                        {
+                            Name = _world[i] + __hq,
+                            Value = "単価: " + _PPU[i]
+                            + " 個数: " + _quantity[i]
+                            + "\n 合計: " + _total[i]
+                        }
+
+                        );
+                }
+            }
+        }
+            
+        
 
         var embedBuilder = new EmbedBuilder()
         {
@@ -247,8 +265,8 @@ class Program
             .WithCurrentTimestamp();
 
 
-        await command.RespondAsync(embed: embedBuilder.Build());
-        
+        await command.FollowupAsync(embed: embedBuilder.Build());
+
     }
 
     string searchitem(string item)
@@ -273,21 +291,21 @@ class Program
 
     }
 
-    string market(string dc, string world, bool dc_b, bool world_b , string item_id, bool hq)
+    string market(string dc, string world, bool dc_b, bool world_b, string item_id, bool hq)
     {
 
         string jdw = "Japan";
 
-        if (dc_b) { jdw = dc; }
+        if (dc_b) { jdw = dc == "1" ? "Elemental" : dc == "2" ? "Gaia" : dc == "3" ? "Mana" : "Meteor"; }
         if (world_b) { jdw = world; }
         string url;
         if (hq) { url = "https://universalis.app/api/v2/" + jdw + "/" + item_id + "?listings=6&hq=true"; }
-         else{ url = "https://universalis.app/api/v2/" + jdw + "/" + item_id + "?listings=6";}
+        else { url = "https://universalis.app/api/v2/" + jdw + "/" + item_id + "?listings=6"; }
         Console.WriteLine(url);
-            WebRequest request = WebRequest.Create(url);
+        WebRequest request = WebRequest.Create(url);
         Stream response_stream = request.GetResponse().GetResponseStream();
         StreamReader reader = new StreamReader(response_stream);
-        var xiv_json = JObject.Parse(reader.ReadToEnd())
+        var xiv_json = JObject.Parse(reader.ReadToEnd());
         if ((string)xiv_json["itemID"] != "0")
         {
             int count = xiv_json["listings"].Count();
@@ -298,24 +316,30 @@ class Program
                 string list3 = null;
                 string list4 = null;
                 string list5 = null;
-                string list6 = null;
                 for (int i = 0; i < 6; i++)
                 {
                     if (i < count)
                     {
-                        var j_pricePerUnit = xiv_json["listings"][i]["pricePerUnit"];   //0,4,8,12,16,20
-                        var j_quantity = xiv_json["listings"][i]["quantity"];           //1,5,9,13,17,21
-                        var j_hq = xiv_json["listings"][i]["hq"];                       //2,6,10,14,18,22
-                        var j_total = xiv_json["listings"][i]["total"];                 //3,7,11,15,19,23
+                        var j_pricePerUnit = xiv_json["listings"][i]["pricePerUnit"];
+                        list1 = list1 + j_pricePerUnit + ";";
+                        var j_quantity = xiv_json["listings"][i]["quantity"];
+                        list2 = list2 + j_quantity + ";";
+                        var j_hq = xiv_json["listings"][i]["hq"];
+                        list3 = list3 + j_hq + ";";
+                        var j_total = xiv_json["listings"][i]["total"];
+                        list4 = list4 + j_total + ";";
+                        JToken j_world = null;
+                        if (jdw == "Japan" || dc_b) { j_world = xiv_json["listings"][i]["worldName"]; } else { j_world = xiv_json["worldName"]; }
+                        list5 = list5 + j_world + ";";
 
-                        
+
                     }
 
                 }
-                return list;
+                return list1 + "," + list2 + "," + list3 + "," + list4 + "," + list5 + "," + count;
             }
+            return "hogehoge";
         }
         return "hoge";
     }
-
 }
