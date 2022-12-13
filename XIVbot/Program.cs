@@ -60,10 +60,17 @@ class Program
             .WithDescription("FFXIV内のアイテム検索")
             .AddOption("itemname", ApplicationCommandOptionType.String, "アイテム名を書いてください", isRequired: true)
             .AddOption(new SlashCommandOptionBuilder()
+                .WithName("hq")
+                .WithDescription("HQの場合はtrue")
+                .WithRequired(true)
+                .AddChoice("true", 1)
+                .AddChoice("false", 2)
+                .WithType(ApplicationCommandOptionType.Integer))
+            .AddOption(new SlashCommandOptionBuilder()
                 .WithName("dc")
                 .WithDescription("データセンター")
                 .WithRequired(false)
-                .AddChoice("Elemental",1)
+                .AddChoice("Elemental", 1)
                 .AddChoice("Gaia", 2)
                 .AddChoice("Mana", 3)
                 .AddChoice("Meteor", 4)
@@ -144,55 +151,53 @@ class Program
     private async Task SearchCommand(SocketSlashCommand command)
     {
 
-        if(command.Data.Options.Count > 2)
-        {
-            await command.RespondAsync("アイテムの名前以外は１つまで入力可能です。");
-            return;
-        }
-
         string world = "-1";
         string dc = "-1";
         bool world_b = false;
         bool dc_b = false;
+        bool hq = false;
 
 
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "elemental_world").First().Value;
-            world = (string)world_id;
+            world = world_id + "";
+            Console.WriteLine(world);
             world_b = true;
-        }catch (Exception exception) { }
+        } catch (Exception exception) { Console.WriteLine("skp1" + exception.Message); }
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "gaia_world").First().Value;
-            world = (string)world_id;
+            world = world_id + "";
             world_b = true;
         }
-        catch (Exception exception) { }
+        catch (Exception exception) { Console.WriteLine("skp2"); }
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "mana_world").First().Value;
-            world = (string)world_id;
+            world = world_id + "";
             world_b = true;
         }
-        catch (Exception exception) { }
+        catch (Exception exception) { Console.WriteLine("skp3"); }
         try
         {
             var world_id = command.Data.Options.Where(x => x.Name == "meteor_world").First().Value;
-            world = (string)world_id;
+            world = world_id + "";
             world_b = true;
         }
-        catch (Exception exception) { }
+        catch (Exception exception) { Console.WriteLine("skp4"); }
         try
         {
             var dc_id = command.Data.Options.Where(x => x.Name == "dc").First().Value;
-            dc = (string)dc_id;
+            dc = dc_id + "";
             dc_b = true;
         }
-        catch (Exception exception){}
+        catch (Exception exception) { Console.WriteLine("skp5"); }
 
+
+        var hqb = command.Data.Options.Where(x => x.Name == "hq").First().Value;
         var item = command.Data.Options.First().Value;
-        Console.WriteLine(item);
+        Console.WriteLine(item + ", " + hqb);
 
             string str = searchitem((string)item);
 
@@ -202,21 +207,34 @@ class Program
             return;
         }
         string[] strsplit = str.Split(",");
-        string[] strsplit2 = market(dc,world,dc_b,world_b,strsplit[0]).Split(",");
-
+        string[] strsplit2 = market(dc,world,dc_b,world_b,strsplit[0],hqb + ""== "1"? true:false).Split(",");
         var list = new List<EmbedFieldBuilder>();
 
-        for(int i = 0; i < 6; i++)
-        list.Add(
-            new EmbedFieldBuilder()
-            {
+        if (strsplit2.Length != 1) { 
+        
+
+            for (int i = 0; i < 6; i++)
+                list.Add(
+                    new EmbedFieldBuilder()
+                    {
                 //0,4,8,12,16,20//1,5,9,13,17,21//3,7,11,15,19,23
                 Name = "Ifrit",
-                Value = "単価: " + strsplit2[i == 0 ? 0:i == 1 ? 4:i == 2 ? 8:i == 3 ? 12:i == 4? 16:20] 
-                + " 個数: " + strsplit2[i == 0 ? 1 : i == 1 ? 5 : i == 2 ? 9 : i == 3 ? 13 : i == 4 ? 17 : 21] 
-                + "\n 合計: " + strsplit2[i == 0 ? 3 : i == 1 ? 7 : i == 2 ? 11 : i == 3 ? 15 : i == 4 ? 19 : 23]
-            }
-            );
+                        Value = "単価: " + strsplit2[i == 0 ? 0 : i == 1 ? 4 : i == 2 ? 8 : i == 3 ? 12 : i == 4 ? 16 : 20]
+                        + " 個数: " + strsplit2[i == 0 ? 1 : i == 1 ? 5 : i == 2 ? 9 : i == 3 ? 13 : i == 4 ? 17 : 21]
+                        + "\n 合計: " + strsplit2[i == 0 ? 3 : i == 1 ? 7 : i == 2 ? 11 : i == 3 ? 15 : i == 4 ? 19 : 23]
+                    }
+                    );
+        }
+        else
+        {
+            list.Add(
+                    new EmbedFieldBuilder()
+                    {
+                        Name = "マーケット取引不可",
+                        Value= "null"
+                    }
+                    );
+        }
 
         var embedBuilder = new EmbedBuilder()
         {
@@ -255,31 +273,49 @@ class Program
 
     }
 
-    string market(string dc, string world, bool dc_b, bool world_b , string item_id)
+    string market(string dc, string world, bool dc_b, bool world_b , string item_id, bool hq)
     {
 
         string jdw = "Japan";
 
-        if (dc_b) { jdw = dc;}
-        if (world_b) { jdw = world;}
-        string url = "https://universalis.app/api/v2/" + jdw + "/" + item_id + "?listings=6";
-
-        WebRequest request = WebRequest.Create(url);
+        if (dc_b) { jdw = dc; }
+        if (world_b) { jdw = world; }
+        string url;
+        if (hq) { url = "https://universalis.app/api/v2/" + jdw + "/" + item_id + "?listings=6&hq=true"; }
+         else{ url = "https://universalis.app/api/v2/" + jdw + "/" + item_id + "?listings=6";}
+        Console.WriteLine(url);
+            WebRequest request = WebRequest.Create(url);
         Stream response_stream = request.GetResponse().GetResponseStream();
         StreamReader reader = new StreamReader(response_stream);
-        var xiv_json = JObject.Parse(reader.ReadToEnd());
-        string list = null;
-        for (int i = 0; i < 6; i++) {
-            var j_pricePerUnit = xiv_json["listings"][i]["pricePerUnit"];   //0,4,8,12,16,20
-            var j_quantity = xiv_json["listings"][i]["quantity"];           //1,5,9,13,17,21
-            var j_hq = xiv_json["listings"][i]["hq"];                       //2,6,10,14,18,22
-            var j_total = xiv_json["listings"][i]["total"];                 //3,7,11,15,19,23
+        var xiv_json = JObject.Parse(reader.ReadToEnd())
+        if ((string)xiv_json["itemID"] != "0")
+        {
+            int count = xiv_json["listings"].Count();
+            if (count > 0)
+            {
+                string list1 = null;
+                string list2 = null;
+                string list3 = null;
+                string list4 = null;
+                string list5 = null;
+                string list6 = null;
+                for (int i = 0; i < 6; i++)
+                {
+                    if (i < count)
+                    {
+                        var j_pricePerUnit = xiv_json["listings"][i]["pricePerUnit"];   //0,4,8,12,16,20
+                        var j_quantity = xiv_json["listings"][i]["quantity"];           //1,5,9,13,17,21
+                        var j_hq = xiv_json["listings"][i]["hq"];                       //2,6,10,14,18,22
+                        var j_total = xiv_json["listings"][i]["total"];                 //3,7,11,15,19,23
 
-            list = list + j_pricePerUnit + "," + j_quantity + "," + j_hq + "," + j_total + ",";
+                        
+                    }
 
-            Console.WriteLine(list);
+                }
+                return list;
+            }
         }
-        return list;
+        return "hoge";
     }
 
 }
